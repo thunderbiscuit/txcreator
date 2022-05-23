@@ -1,5 +1,6 @@
 use std::error::Error;
 use bdk::{bitcoin, FeeRate, SignOptions, SyncOptions, Wallet};
+use bdk::bitcoin::Transaction;
 // use bdk::bitcoin::Network;
 // use bdk::bitcoin::util::address::Payload::WitnessProgram;
 use bdk::blockchain::ElectrumBlockchain;
@@ -63,7 +64,7 @@ pub fn create_tx(
 
     wallet.sign(&mut psbt, SignOptions::default());
 
-    let funding_tx = psbt.extract_tx();
+    let mut funding_tx: Transaction = psbt.extract_tx();
 
     let mut funding_tx_hex = String::new();
 
