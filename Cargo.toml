@@ -1,0 +1,9 @@
+[package]
+name = "txcreator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bdk = "0.18.0"
+structopt = "0.3"
+hex = "0.3.1"
