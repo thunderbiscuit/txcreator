@@ -1,7 +1,9 @@
 use std::error::Error;
 use std::str::FromStr;
 use bdk::{bitcoin, FeeRate, SignOptions, SyncOptions, Wallet};
-use bdk::bitcoin::{Address, Transaction};
+use bdk::bitcoin::{Address, Script, Transaction};
+use bdk::bitcoin::consensus::deserialize;
+use bdk::bitcoin::Network::Testnet;
 use bdk::bitcoin::util::psbt::serialize::Serialize;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
@@ -30,30 +32,19 @@ pub fn create_tx(
         MemoryDatabase::default(),
     )?;
 
-    // testing that the wallet gets created and can sync
-    // let address = wallet.get_address(AddressIndex::New).unwrap().to_string();
     wallet.sync(&blockchain, SyncOptions::default())?;
-    // let balance = wallet.get_balance().unwrap().to_string();
 
     let output_script_raw: Vec<u8> = Vec::from_hex(&output_script_hex).expect("Transforming the hex into raw bytes didn't work");
 
-    let address = WitnessProgram::from_scriptpubkey(
-        &output_script_raw[..],
-        bitcoin_bech32::constants::Network::Testnet
-    )
-        .expect("Lightning funding tx should always be to a SegWit output")
-        .to_address();
-
+    let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
     // thread 'main' panicked at 'Deserialization didn't work: ParseFailed("data not consumed entirely when explicitly deserializing")'
-    // let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
 
     let fee_rate = FeeRate::from_sat_per_vb(2.0);
 
     let (mut psbt, details) = {
         let mut builder = wallet.build_tx();
         builder
-            // .add_recipient(address.script_pubkey(), channel_value_satoshis)
-            .add_recipient(Address::from_str(address.as_str()).unwrap().script_pubkey(), channel_value_satoshis)
+            .add_recipient(output_script, channel_value_satoshis)
             .fee_rate(fee_rate)
             .enable_rbf();
         builder
