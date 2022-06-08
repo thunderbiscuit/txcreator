@@ -688,6 +688,7 @@ name = "txcreator"
 version = "0.1.0"
 dependencies = [
  "bdk",
+ "bech32",
  "bitcoin-bech32",
  "hex",
  "structopt",

@@ -4,11 +4,14 @@ use bdk::{bitcoin, FeeRate, SignOptions, SyncOptions, Wallet};
 use bdk::bitcoin::{Address, Script, Transaction};
 use bdk::bitcoin::consensus::deserialize;
 use bdk::bitcoin::Network::Testnet;
+use bdk::bitcoin::util::address::Payload;
 use bdk::bitcoin::util::psbt::serialize::Serialize;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
 use bdk::electrum_client::Client;
 use bitcoin_bech32::WitnessProgram;
+// use bitcoin::util::address::WitnessVersion;
+use bech32::u5;
 use hex::FromHex;
 
 pub fn create_tx(
@@ -36,15 +39,24 @@ pub fn create_tx(
 
     let output_script_raw: Vec<u8> = Vec::from_hex(&output_script_hex).expect("Transforming the hex into raw bytes didn't work");
 
-    let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
+    // let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
     // thread 'main' panicked at 'Deserialization didn't work: ParseFailed("data not consumed entirely when explicitly deserializing")'
+
+    let payload: Payload = Payload::WitnessProgram { version: u5::try_from_u8(0).unwrap(), program: output_script_raw };
+    let address: Address = Address {
+        payload,
+        network
+    };
 
     let fee_rate = FeeRate::from_sat_per_vb(2.0);
 
     let (mut psbt, details) = {
         let mut builder = wallet.build_tx();
         builder
-            .add_recipient(output_script, channel_value_satoshis)
+            // errors out, see above comment
+            // .add_recipient(output_script, channel_value_satoshis)
+            // using Payload
+            .add_recipient(address.script_pubkey(), channel_value_satoshis)
             .fee_rate(fee_rate)
             .enable_rbf();
         builder
