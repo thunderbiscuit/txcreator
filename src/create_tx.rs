@@ -1,17 +1,13 @@
 use std::error::Error;
-use std::str::FromStr;
 use bdk::{bitcoin, FeeRate, SignOptions, SyncOptions, Wallet};
-use bdk::bitcoin::{Address, Script, Transaction};
-use bdk::bitcoin::consensus::deserialize;
-use bdk::bitcoin::Network::Testnet;
+use bdk::bitcoin::{Address, Transaction};
+// use bdk::bitcoin::consensus::deserialize;
 use bdk::bitcoin::util::address::Payload;
 use bdk::bitcoin::util::psbt::serialize::Serialize;
 use bdk::blockchain::ElectrumBlockchain;
 use bdk::database::MemoryDatabase;
 use bdk::electrum_client::Client;
-use bitcoin_bech32::WitnessProgram;
-// use bitcoin::util::address::WitnessVersion;
-use bech32::u5;
+use bitcoin::util::address::WitnessVersion;
 use hex::FromHex;
 
 pub fn create_tx(
@@ -42,7 +38,7 @@ pub fn create_tx(
     // let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
     // thread 'main' panicked at 'Deserialization didn't work: ParseFailed("data not consumed entirely when explicitly deserializing")'
 
-    let payload: Payload = Payload::WitnessProgram { version: u5::try_from_u8(0).unwrap(), program: output_script_raw };
+    let payload: Payload = Payload::WitnessProgram { version: WitnessVersion::V0, program: output_script_raw };
     let address: Address = Address {
         payload,
         network
@@ -50,7 +46,7 @@ pub fn create_tx(
 
     let fee_rate = FeeRate::from_sat_per_vb(2.0);
 
-    let (mut psbt, details) = {
+    let (mut psbt, _details) = {
         let mut builder = wallet.build_tx();
         builder
             // errors out, see above comment
@@ -63,7 +59,7 @@ pub fn create_tx(
             .finish()?
     };
 
-    wallet.sign(&mut psbt, SignOptions::default());
+    wallet.sign(&mut psbt, SignOptions::default())?;
 
     let funding_tx: Transaction = psbt.extract_tx();
     let funding_tx_encoded = funding_tx.serialize();

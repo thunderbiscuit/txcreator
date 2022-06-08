@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bdk = "0.18.0"
+# bdk = "0.18.0"
+bdk = { git = "https://github.com/bitcoindevkit/bdk", branch = "master" }
 structopt = "0.3"
 hex = "0.4.3"
-bitcoin-bech32 = "0.12"
-bech32 = "0.8.1"
+# bitcoin-bech32 = "0.12"
+# bech32 = "0.8.1"
