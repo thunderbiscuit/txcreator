@@ -36,14 +36,14 @@ pub fn create_tx(
 
     let output_script_raw: Vec<u8> = Vec::from_hex(&output_script_hex).expect("Transforming the hex into raw bytes didn't work");
 
-    // technique 1
-    // let payload: Payload = Payload::WitnessProgram { version: WitnessVersion::V0, program: output_script_raw };
+    // technique 1 (you need to strip the first two bytes of the output_script given by LDK for this to work)
+    // let payload: Payload = Payload::WitnessProgram { version: WitnessVersion::V0, program: output_script_raw[2..].to_vec() };
     // let address: Address = Address {
     //     payload,
     //     network
     // };
 
-    // technique 2
+    // technique 2 (better)
     // let script: Script = Script::from_hex(&output_script_hex).unwrap();
     let script: Script = Script::from(output_script_raw);
 
@@ -54,8 +54,8 @@ pub fn create_tx(
         let mut builder = wallet.build_tx();
         builder
             // technique 1
-            // .add_recipient(address.script_pubkey(), channel_value_satoshis)
-            // technique 2
+            //.add_recipient(address.script_pubkey(), channel_value_satoshis)
+            // technique 2 (better)
             .add_recipient(script, channel_value_satoshis)
             .fee_rate(fee_rate)
             .enable_rbf();
