@@ -37,17 +37,13 @@ pub fn create_tx(
     let output_script_raw: Vec<u8> = Vec::from_hex(&output_script_hex).expect("Transforming the hex into raw bytes didn't work");
 
     // technique 1
-    // let output_script: Script = deserialize(&output_script_raw).expect("Deserialization didn't work");
-    // thread 'main' panicked at 'Deserialization didn't work: ParseFailed("data not consumed entirely when explicitly deserializing")'
-
-    // technique 2
     // let payload: Payload = Payload::WitnessProgram { version: WitnessVersion::V0, program: output_script_raw };
     // let address: Address = Address {
     //     payload,
     //     network
     // };
 
-    // technique 3
+    // technique 2
     // let script: Script = Script::from_hex(&output_script_hex).unwrap();
     let script: Script = Script::from(output_script_raw);
 
@@ -57,11 +53,9 @@ pub fn create_tx(
     let (mut psbt, _details) = {
         let mut builder = wallet.build_tx();
         builder
-            // technique 1, errors out, see above comment
-            // .add_recipient(output_script, channel_value_satoshis)
-            // technique 2
+            // technique 1
             // .add_recipient(address.script_pubkey(), channel_value_satoshis)
-            // technique 3
+            // technique 2
             .add_recipient(script, channel_value_satoshis)
             .fee_rate(fee_rate)
             .enable_rbf();
